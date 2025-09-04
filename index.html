@@ -396,10 +396,6 @@
             const chatHistory = document.getElementById('chat-history');
             const chatTitle = document.getElementById('chat-title');
             
-            // API Keys (in a real application, these should be stored securely on the backend)
-            const CHATGPT_API_KEY = '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';
-            const GEMINI_API_KEY = 'AIzaSyAg1ahiWIFCutnF24YAyxgT_-mRvPM4fMA';
-            
             // State variables
             let currentChatId = 'chat-' + Date.now();
             let chats = JSON.parse(localStorage.getItem('gemgpt-chats')) || {};
@@ -617,12 +613,8 @@
                 thinkingIndicator.style.display = 'block';
                 
                 try {
-                    // Try Gemini API first, then ChatGPT
-                    let response = await queryGeminiAPI(message);
-                    
-                    if (!response || response.error) {
-                        response = await queryChatGPTAPI(message);
-                    }
+                    // Generate AI response
+                    const response = await generateAIResponse(message, chats[currentChatId].messages);
                     
                     // Hide thinking indicator
                     thinkingIndicator.style.display = 'none';
@@ -650,59 +642,66 @@
                 }
             }
             
-            // Query Gemini API
-            async function queryGeminiAPI(message) {
+            // Generate AI response based on message and context
+            async function generateAIResponse(message, messageHistory) {
                 try {
-                    // This is a simulated implementation since we can't actually call the API from the frontend
-                    // In a real application, this would be done through a backend server
-                    
                     // Simulate API delay
                     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
                     
-                    // Generate a thoughtful response based on the user's message
-                    const responses = [
-                        `Anda menyebutkan: "${message}". Mari kita uji asumsi dalam pernyataan ini. Apa bukti yang mendukung klaim tersebut, dan adakah bukti yang mungkin bertentangan?`,
-                        
-                        `Poin menarik. Dari perspektif lain, seseorang mungkin berargumen bahwa ${message.toLowerCase()} tidak sepenuhnya akurat. Misalnya, dalam konteks historis, kita dapat melihat contoh di mana...`,
-                        
-                        `Saya mendeteksi beberapa asumsi dalam pernyataan Anda. Mari kita bedah bersama. Pertama, Anda tampaknya berasumsi bahwa... Apakah asumsi ini selalu benar?`,
-                        
-                        `Dalam menganalisis pernyataan Anda, saya menemukan beberapa potensi bias kognitif. Mungkin kita terjebak dalam bias konfirmasi - mencari bukti yang mendukung keyakinan kita dan mengabaikan yang bertentangan.`,
-                        
-                        `Mari kita lihat ini dari sudut pandang yang berbeda. Seorang kritikus mungkin mengatakan bahwa ${message.toLowerCase()} mengabaikan faktor penting seperti...`
-                    ];
+                    // Check if it's a greeting or simple message
+                    const lowerMessage = message.toLowerCase();
                     
-                    return { text: responses[Math.floor(Math.random() * responses.length)] };
+                    if (lowerMessage.includes('halo') || lowerMessage.includes('hai') || 
+                        lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                        return { 
+                            text: "Halo! Saya GemGPT, mitra diskusi analitis Anda. Daripada sekadar menyapa, apakah ada topik, ide, atau klaim spesifik yang ingin Anda uji dan dalami bersama? Saya di sini untuk menantang pemikiran Anda dan membantu mengembangkan argumen yang lebih kokoh." 
+                        };
+                    }
+                    
+                    // Check if it's a thank you message
+                    if (lowerMessage.includes('terima kasih') || lowerMessage.includes('thanks') || 
+                        lowerMessage.includes('thank you')) {
+                        return { 
+                            text: "Sama-sama. Ingat, tujuan saya bukan untuk membuat Anda merasa nyaman, tetapi untuk membantu Anda mencapai pemahaman yang lebih mendalam dan bebas bias. Apakah ada aspek lain dari diskusi kita yang perlu kita eksplorasi lebih dalam?" 
+                        };
+                    }
+                    
+                    // Analyze the conversation context for more relevant responses
+                    const lastFewMessages = messageHistory.slice(-4); // Get last 4 messages for context
+                    
+                    // Check if user is asking for explanation or examples
+                    if (lowerMessage.includes('contoh') || lowerMessage.includes('contohnya') || 
+                        lowerMessage.includes('contohnya') || lowerMessage.includes('example') ||
+                        lowerMessage.includes('contoh')) {
+                        return { 
+                            text: "Baik, berikut contoh konkret untuk ilustrasi: Misalnya Anda berargumen bahwa 'teknologi selalu meningkatkan produktivitas'. Mari kita uji ini. Asumsi tersembunyi: bahwa teknologi selalu diterapkan dengan efektif dan tidak memiliki dampak negatif yang signifikan. Kontra-argumen: Dalam banyak kasus, teknologi justru menciptakan gangguan (notifikasi terus-menerus) dan memerlukan waktu adaptasi yang justru mengurangi produktivitas jangka pendek. Perspektif alternatif: Dari sudut pandang sosiologis, teknologi dapat mengubah struktur sosial dan pola kerja secara mendalam, tidak selalu linear terhadap produktivitas." 
+                        };
+                    }
+                    
+                    // Default analytical response for substantive messages
+                    if (message.length > 5) {
+                        return {
+                            text: `Anda menyatakan: "${message}". 
+
+1. Asumsi yang perlu diuji: Anda tampaknya berasumsi bahwa pernyataan ini berlaku universal atau tidak memiliki pengecualian. Benarkah demikian?
+
+2. Kontra-argumen: Seorang kritikus mungkin berpendapat bahwa pernyataan ini mengabaikan [faktor penting] dan tidak mempertimbangkan [perspektif alternatif].
+
+3. Uji konsistensi: Apakah pernyataan ini konsisten dengan keyakinan atau pernyataan lain yang Anda miliki? 
+
+4. Perspektif alternatif: Dari sudut pandang [disiplin ilmu terkait], pernyataan ini bisa dilihat sebagai [interpretasi alternatif].
+
+Bisakah Anda menjelaskan lebih detail apa yang mendasari pernyataan ini, atau adakah aspek spesifik yang ingin kita eksplorasi lebih dalam?`
+                        };
+                    }
+                    
+                    // For very short messages
+                    return {
+                        text: "Saya mendeteksi bahwa pesan Anda sangat singkat. Sebagai mitra analitis, saya dirancang untuk mengeksplorasi ide dan argumen yang kompleks. Bisakah Anda menguraikan pemikiran atau klaim yang ingin Anda diskusikan dengan lebih detail?"
+                    };
+                    
                 } catch (error) {
-                    console.error('Gemini API Error:', error);
-                    return { error: error.message };
-                }
-            }
-            
-            // Query ChatGPT API
-            async function queryChatGPTAPI(message) {
-                try {
-                    // This is also a simulated implementation
-                    
-                    // Simulate API delay
-                    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
-                    
-                    // Generate a thoughtful response
-                    const responses = [
-                        `Anda mengajukan klaim: "${message}". Mari kita uji konsistensi logika dalam argumen ini. Jika kita menerima premis Anda, apakah kesimpulannya必然 mengikuti?`,
-                        
-                        `Pernyataan Anda menarik. Dari perspektif ilmiah, kita mungkin mempertanyakan metodologi behind the evidence supporting ${message.toLowerCase}. Apa standar bukti yang kita gunakan?`,
-                        
-                        `Sebelum menerima klaim ini, mari kita pertimbangkan kemungkinan bias. Apakah kita selectively menggunakan data yang mendukung pandangan kita sambil mengabaikan data yang kontradiktif?`,
-                        
-                        `Dalam kerangka etika, pernyataan Anda memiliki implikasi yang menarik. Jika kita menerima ${message.toLowerCase}, apa konsekuensi moral yang mungkin timbul?`,
-                        
-                        `Mari kita breakdown pernyataan Anda menjadi komponen-komponen logis. Pertama, Anda berasumsi bahwa... Kedua, Anda menyimpulkan bahwa... Apakah hubungan antara asumsi dan kesimpulan ini valid?`
-                    ];
-                    
-                    return { text: responses[Math.floor(Math.random() * responses.length)] };
-                } catch (error) {
-                    console.error('ChatGPT API Error:', error);
+                    console.error('AI Response Error:', error);
                     return { error: error.message };
                 }
             }
