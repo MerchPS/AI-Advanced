@@ -18,6 +18,7 @@
             --thinking-color: #6366f1;
             --user-msg-color: #3b82f6;
             --ai-msg-color: #4b5563;
+            --ai-msg-bg: #374151;
         }
 
         * {
@@ -48,6 +49,9 @@
         .sidebar-header {
             padding: 20px;
             border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
 
         .sidebar-header h2 {
@@ -55,6 +59,15 @@
             align-items: center;
             gap: 10px;
             font-size: 1.5rem;
+        }
+
+        .close-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
         }
 
         .new-chat-btn {
@@ -111,6 +124,9 @@
             border-top: 1px solid #374151;
             font-size: 0.8rem;
             color: #9ca3af;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         /* Main Content Styles */
@@ -143,6 +159,21 @@
             font-weight: 500;
         }
 
+        .clear-chat-btn {
+            background: none;
+            border: none;
+            color: #9ca3af;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .clear-chat-btn:hover {
+            color: #e5e7eb;
+        }
+
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -153,10 +184,11 @@
         }
 
         .message {
-            max-width: 80%;
+            max-width: 85%;
             padding: 16px 20px;
             border-radius: 12px;
             line-height: 1.5;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .user-message {
@@ -168,7 +200,7 @@
 
         .ai-message {
             align-self: flex-start;
-            background-color: var(--ai-msg-color);
+            background-color: var(--ai-msg-bg);
             color: white;
             border-bottom-left-radius: 4px;
         }
@@ -181,6 +213,10 @@
             font-weight: 500;
         }
 
+        .message-content {
+            white-space: pre-line;
+        }
+
         .thinking-indicator {
             display: none;
             padding: 16px;
@@ -189,7 +225,7 @@
             border-radius: 12px;
             margin: 10px 0;
             align-self: flex-start;
-            max-width: 80%;
+            max-width: 85%;
         }
 
         .thinking-content {
@@ -233,10 +269,16 @@
         .chat-input-form {
             display: flex;
             gap: 12px;
+            align-items: flex-end;
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            position: relative;
         }
 
         .chat-input {
-            flex: 1;
+            width: 100%;
             padding: 14px 16px;
             background-color: #374151;
             color: white;
@@ -247,14 +289,32 @@
             resize: none;
             min-height: 56px;
             max-height: 200px;
+            transition: border-color 0.2s;
         }
 
         .chat-input:focus {
             border-color: var(--primary-color);
         }
 
+        .input-hint {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: #9ca3af;
+            background-color: rgba(55, 65, 81, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .chat-input:focus + .input-hint {
+            display: block;
+        }
+
         .send-button {
-            padding: 0 20px;
+            height: 56px;
+            width: 56px;
             background-color: var(--primary-color);
             color: white;
             border: none;
@@ -265,10 +325,16 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.2s;
+            flex-shrink: 0;
         }
 
         .send-button:hover {
             background-color: var(--secondary-color);
+        }
+
+        .send-button:disabled {
+            background-color: #4b5563;
+            cursor: not-allowed;
         }
 
         .error-message {
@@ -293,6 +359,11 @@
             
             .sidebar.open {
                 transform: translateX(0);
+                box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            }
+            
+            .close-sidebar {
+                display: block;
             }
             
             .menu-toggle {
@@ -301,6 +372,16 @@
             
             .message {
                 max-width: 90%;
+            }
+            
+            .chat-input-form {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .send-button {
+                width: 100%;
+                height: 48px;
             }
         }
 
@@ -328,6 +409,9 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <h2><i class="fas fa-robot"></i> GemGPT</h2>
+            <button class="close-sidebar" id="close-sidebar">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         <button class="new-chat-btn" id="new-chat-btn">
             <i class="fas fa-plus"></i> New Chat
@@ -337,6 +421,7 @@
         </div>
         <div class="sidebar-footer">
             <p>GemGPT v1.0 | Advanced AI Intellectual Partner</p>
+            <p>Menggabungkan ChatGPT dan Gemini AI</p>
         </div>
     </div>
 
@@ -347,7 +432,9 @@
                 <i class="fas fa-bars"></i>
             </button>
             <div class="chat-title" id="chat-title">New Chat</div>
-            <div></div> <!-- Empty div for spacing -->
+            <button class="clear-chat-btn" id="clear-chat-btn">
+                <i class="fas fa-trash"></i> Clear Chat
+            </button>
         </div>
         
         <div class="chat-messages" id="chat-messages">
@@ -355,7 +442,9 @@
                 <div class="message-header">
                     <i class="fas fa-robot"></i> GemGPT
                 </div>
-                Halo. Saya GemGPT, mitra adu gagasan Anda. Saya di sini untuk menantang pemikiran Anda, menguji asumsi, dan membantu Anda mencapai pemahaman yang lebih kokoh dan bebas bias. Saya akan jujur, analitis, dan tidak segan menantang Anda. Apa ide atau klaim yang ingin Anda uji hari ini?
+                <div class="message-content">
+                    Halo. Saya GemGPT, mitra adu gagasan Anda. Saya di sini untuk menantang pemikiran Anda, menguji asumsi, dan membantu Anda mencapai pemahaman yang lebih kokoh dan bebas bias. Saya akan jujur, analitis, dan tidak segan menantang Anda. Apa ide atau klaim yang ingin Anda uji hari ini?
+                </div>
             </div>
         </div>
         
@@ -374,8 +463,11 @@
         
         <div class="chat-input-container">
             <form class="chat-input-form" id="chat-form">
-                <textarea class="chat-input" id="user-input" placeholder="Ketik ide atau klaim Anda di sini..." rows="1" autocomplete="off"></textarea>
-                <button type="submit" class="send-button">
+                <div class="chat-input-wrapper">
+                    <textarea class="chat-input" id="user-input" placeholder="Ketik ide atau klaim Anda di sini..." rows="1" autocomplete="off"></textarea>
+                    <div class="input-hint">Enter untuk mengirim • Shift+Enter untuk baris baru</div>
+                </div>
+                <button type="submit" class="send-button" id="send-button" disabled>
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </form>
@@ -387,18 +479,22 @@
             // DOM Elements
             const sidebar = document.getElementById('sidebar');
             const menuToggle = document.getElementById('menu-toggle');
+            const closeSidebar = document.getElementById('close-sidebar');
             const chatMessages = document.getElementById('chat-messages');
             const userInput = document.getElementById('user-input');
             const chatForm = document.getElementById('chat-form');
+            const sendButton = document.getElementById('send-button');
             const thinkingIndicator = document.getElementById('thinking-indicator');
             const errorMessage = document.getElementById('error-message');
             const newChatBtn = document.getElementById('new-chat-btn');
+            const clearChatBtn = document.getElementById('clear-chat-btn');
             const chatHistory = document.getElementById('chat-history');
             const chatTitle = document.getElementById('chat-title');
             
             // State variables
             let currentChatId = 'chat-' + Date.now();
             let chats = JSON.parse(localStorage.getItem('gemgpt-chats')) || {};
+            let isProcessing = false;
             
             // Initialize the application
             function init() {
@@ -433,7 +529,11 @@
             function setupEventListeners() {
                 // Toggle sidebar on mobile
                 menuToggle.addEventListener('click', function() {
-                    sidebar.classList.toggle('open');
+                    sidebar.classList.add('open');
+                });
+                
+                closeSidebar.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
                 });
                 
                 // Form submission
@@ -442,14 +542,34 @@
                     sendMessage();
                 });
                 
-                // Auto-resize textarea
+                // Handle Enter key (send message) and Shift+Enter (new line)
+                userInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!isProcessing && userInput.value.trim()) {
+                            sendMessage();
+                        }
+                    }
+                    
+                    // Auto-resize textarea
+                    setTimeout(() => {
+                        this.style.height = 'auto';
+                        this.style.height = (this.scrollHeight) + 'px';
+                    }, 0);
+                });
+                
+                // Enable/disable send button based on input
                 userInput.addEventListener('input', function() {
+                    sendButton.disabled = !this.value.trim() || isProcessing;
                     this.style.height = 'auto';
                     this.style.height = (this.scrollHeight) + 'px';
                 });
                 
                 // Create new chat
                 newChatBtn.addEventListener('click', createNewChat);
+                
+                // Clear current chat
+                clearChatBtn.addEventListener('click', clearCurrentChat);
             }
             
             // Load chat history from localStorage
@@ -548,6 +668,35 @@
                 // Clear input
                 userInput.value = '';
                 userInput.style.height = 'auto';
+                sendButton.disabled = true;
+                
+                // Close sidebar on mobile
+                if (window.innerWidth < 768) {
+                    sidebar.classList.remove('open');
+                }
+            }
+            
+            // Clear current chat
+            function clearCurrentChat() {
+                if (confirm('Apakah Anda yakin ingin menghapus percakapan ini?')) {
+                    chats[currentChatId] = {
+                        id: currentChatId,
+                        title: 'New Chat',
+                        messages: [
+                            {
+                                sender: 'ai',
+                                content: 'Halo. Saya GemGPT, mitra adu gagasan Anda. Saya di sini untuk menantang pemikiran Anda, menguji asumsi, dan membantu Anda mencapai pemahaman yang lebih kokoh dan bebas bias. Saya akan jujur, analitis, dan tidak segan menantang Anda. Apa ide atau klaim yang ingin Anda uji hari ini?',
+                                timestamp: Date.now()
+                            }
+                        ],
+                        timestamp: Date.now()
+                    };
+                    
+                    // Save and update UI
+                    saveChats();
+                    loadChat(currentChatId);
+                    loadChatHistory();
+                }
             }
             
             // Save chats to localStorage
@@ -567,8 +716,12 @@
                     '<i class="fas fa-user"></i> You' : 
                     '<i class="fas fa-robot"></i> GemGPT';
                 
+                const messageContent = document.createElement('div');
+                messageContent.classList.add('message-content');
+                messageContent.textContent = text;
+                
                 messageDiv.appendChild(messageHeader);
-                messageDiv.appendChild(document.createTextNode(text));
+                messageDiv.appendChild(messageContent);
                 
                 chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -585,8 +738,13 @@
             
             // Send message to AI
             async function sendMessage() {
+                if (isProcessing) return;
+                
                 const message = userInput.value.trim();
                 if (!message) return;
+                
+                isProcessing = true;
+                sendButton.disabled = true;
                 
                 // Add user message to UI
                 addMessageToUI(message, true);
@@ -639,6 +797,9 @@
                     thinkingIndicator.style.display = 'none';
                     showError('Error: ' + error.message);
                     addMessageToUI('Maaf, saya mengalami kesalahan teknis. Bisakah Anda mencoba lagi atau merumuskan ulang pertanyaannya?', false);
+                } finally {
+                    isProcessing = false;
+                    sendButton.disabled = !userInput.value.trim();
                 }
             }
             
@@ -652,7 +813,8 @@
                     const lowerMessage = message.toLowerCase();
                     
                     if (lowerMessage.includes('halo') || lowerMessage.includes('hai') || 
-                        lowerMessage.includes('hello') || lowerMessage.includes('hi')) {
+                        lowerMessage.includes('hello') || lowerMessage.includes('hi') ||
+                        lowerMessage.includes('halow')) {
                         return { 
                             text: "Halo! Saya GemGPT, mitra diskusi analitis Anda. Daripada sekadar menyapa, apakah ada topik, ide, atau klaim spesifik yang ingin Anda uji dan dalami bersama? Saya di sini untuk menantang pemikiran Anda dan membantu mengembangkan argumen yang lebih kokoh." 
                         };
@@ -660,50 +822,80 @@
                     
                     // Check if it's a thank you message
                     if (lowerMessage.includes('terima kasih') || lowerMessage.includes('thanks') || 
-                        lowerMessage.includes('thank you')) {
+                        lowerMessage.includes('thank you') || lowerMessage.includes('makasih')) {
                         return { 
                             text: "Sama-sama. Ingat, tujuan saya bukan untuk membuat Anda merasa nyaman, tetapi untuk membantu Anda mencapai pemahaman yang lebih mendalam dan bebas bias. Apakah ada aspek lain dari diskusi kita yang perlu kita eksplorasi lebih dalam?" 
                         };
                     }
                     
-                    // Analyze the conversation context for more relevant responses
-                    const lastFewMessages = messageHistory.slice(-4); // Get last 4 messages for context
-                    
-                    // Check if user is asking for explanation or examples
-                    if (lowerMessage.includes('contoh') || lowerMessage.includes('contohnya') || 
-                        lowerMessage.includes('contohnya') || lowerMessage.includes('example') ||
-                        lowerMessage.includes('contoh')) {
+                    // Check if user is introducing themselves
+                    if (lowerMessage.includes('nama saya') || lowerMessage.includes('nama ku') || 
+                        lowerMessage.includes('kenalin') || lowerMessage.includes('perkenalkan')) {
                         return { 
-                            text: "Baik, berikut contoh konkret untuk ilustrasi: Misalnya Anda berargumen bahwa 'teknologi selalu meningkatkan produktivitas'. Mari kita uji ini. Asumsi tersembunyi: bahwa teknologi selalu diterapkan dengan efektif dan tidak memiliki dampak negatif yang signifikan. Kontra-argumen: Dalam banyak kasus, teknologi justru menciptakan gangguan (notifikasi terus-menerus) dan memerlukan waktu adaptasi yang justru mengurangi produktivitas jangka pendek. Perspektif alternatif: Dari sudut pandang sosiologis, teknologi dapat mengubah struktur sosial dan pola kerja secara mendalam, tidak selalu linear terhadap produktivitas." 
+                            text: "Senang berkenalan dengan Anda. Sebagai mitra analitis, saya tidak fokus pada identitas pribadi tetapi pada kualitas argumen dan ide. Mari kita langsung ke substansi diskusi. Apa topik atau klaim yang ingin Anda bahas?" 
+                        };
+                    }
+                    
+                    // Check if user is asking for their name
+                    if (lowerMessage.includes('nama ku siapa') || lowerMessage.includes('siapa nama saya')) {
+                        return { 
+                            text: "Sebagai AI, saya tidak menyimpan informasi pribadi tentang Anda. Fokus saya adalah pada analisis ide dan argumen, bukan identitas individu. Mari kita lanjutkan diskusi substantif tentang topik yang ingin Anda dalami." 
+                        };
+                    }
+                    
+                    // Check if user is asking who they are
+                    if (lowerMessage.includes('saya siapa') || lowerMessage.includes('aku siapa')) {
+                        return { 
+                            text: "Pertanyaan filosofis yang menarik! Daripada saya yang mendefinisikan identitas Anda, mari kita eksplorasi pertanyaan ini bersama. Dari perspektif apa Anda ingin mendekati pertanyaan ini: psikologis, sosiologis, filosofis, atau yang lainnya?" 
+                        };
+                    }
+                    
+                    // Check if user is asking who the AI is
+                    if (lowerMessage.includes('kamu siapa') || lowerMessage.includes('siapa kamu')) {
+                        return { 
+                            text: "Saya GemGPT, sebuah AI yang dirancang khusus sebagai mitra adu gagasan. Tugas saya adalah membantu Anda menguji dan memperkuat pemikiran melalui analisis ketat, tantangan terhadap asumsi, dan penyediaan perspektif alternatif. Saya menggabungkan kemampuan analitis dari model ChatGPT dan Gemini." 
+                        };
+                    }
+                    
+                    // For very short or unclear messages
+                    if (message.length < 3) {
+                        return {
+                            text: "Pesan Anda sangat singkat. Bisakah Anda menguraikan pemikiran atau pertanyaan yang ingin Anda diskusikan dengan lebih detail?"
                         };
                     }
                     
                     // Default analytical response for substantive messages
-                    if (message.length > 5) {
-                        return {
-                            text: `Anda menyatakan: "${message}". 
-
-1. Asumsi yang perlu diuji: Anda tampaknya berasumsi bahwa pernyataan ini berlaku universal atau tidak memiliki pengecualian. Benarkah demikian?
-
-2. Kontra-argumen: Seorang kritikus mungkin berpendapat bahwa pernyataan ini mengabaikan [faktor penting] dan tidak mempertimbangkan [perspektif alternatif].
-
-3. Uji konsistensi: Apakah pernyataan ini konsisten dengan keyakinan atau pernyataan lain yang Anda miliki? 
-
-4. Perspektif alternatif: Dari sudut pandang [disiplin ilmu terkait], pernyataan ini bisa dilihat sebagai [interpretasi alternatif].
-
-Bisakah Anda menjelaskan lebih detail apa yang mendasari pernyataan ini, atau adakah aspek spesifik yang ingin kita eksplorasi lebih dalam?`
-                        };
-                    }
-                    
-                    // For very short messages
                     return {
-                        text: "Saya mendeteksi bahwa pesan Anda sangat singkat. Sebagai mitra analitis, saya dirancang untuk mengeksplorasi ide dan argumen yang kompleks. Bisakah Anda menguraikan pemikiran atau klaim yang ingin Anda diskusikan dengan lebih detail?"
+                        text: generateAnalyticalResponse(message)
                     };
                     
                 } catch (error) {
                     console.error('AI Response Error:', error);
                     return { error: error.message };
                 }
+            }
+            
+            // Generate an appropriate analytical response
+            function generateAnalyticalResponse(message) {
+                // Simple questions get direct responses
+                if (message.endsWith('?') && message.length < 50) {
+                    return "Itu pertanyaan yang bagus. Sebelum langsung menjawab, mari kita uji asumsi di balik pertanyaan tersebut. Apa yang membuat Anda bertanya tentang hal itu, dan adakah konteks khusus yang perlu kita pertimbangkan?";
+                }
+                
+                // Statements get analytical responses
+                const responses = [
+                    `Anda menyatakan: "${message}". \n\nMari kita uji klaim ini. Asumsi apa yang mendasarinya, dan apakah ada bukti yang mendukung atau menentangnya?`,
+
+                    `Pernyataan menarik. Seorang kritikus mungkin bertanya: apa bukti terkuat yang mendukung "${message}", dan apa bukti terkuat yang menentangnya?`,
+
+                    `Mari kita breakdown pernyataan Anda. Bagian mana dari "${message}" yang merupakan fakta observasi, dan bagian mana yang merupakan interpretasi atau evaluasi?`,
+
+                    `Dari sudut pandang alternatif, pernyataan Anda bisa dilihat berbeda. Misalnya, dalam konteks historis, apakah "${message}" selalu benar?`,
+
+                    `Mari kita eksplorasi implikasi dari pernyataan Anda. Jika "${message}" benar, apa konsekuensinya? Dan jika salah, apa alternatifnya?`
+                ];
+                
+                return responses[Math.floor(Math.random() * responses.length)];
             }
             
             // Initialize the app
